@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    environment {
+        registry = "yourdockerhub_userame/ecommapp"
+        //registryCredential = 'docker_hub'
+        dockerImage = 'ecommapp'
+    }
+	triggers {
+        // GitHub hook trigger for GITScm polling
+        githubPush()
+    }
+    stages {
+        stage('Cloning our Git') {
+            steps {
+                git branch: 'main', url: 'https git link of ecommapp'
+             sh 'echo ""   >> .env'
+            }
+        }
+        /*
+//comment this first time from second build uncomment this code
+        stage('CleanUp') {
+            steps{
+                sh "docker stop ecommapp"
+                sh "docker rm ecommapp"
+                sh "docker rmi $registry -f"
+            }
+        }
+*/
+
+        stage('Building our image') {
+            steps{
+                script {
+                    dockerImage = docker.build registry
+                }
+            }
+        }
+        stage('Run Container') {
+            steps{
+                sh "docker run -d -p 5000:5000 --name ecommapp $registry"
+            }
+        }
+        /*
+        stage('Deploy our image') {
+            steps{
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }*/
+       
+    }
+}
